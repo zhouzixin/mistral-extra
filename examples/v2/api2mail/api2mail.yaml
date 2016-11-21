@@ -1,0 +1,30 @@
+---
+version: '2.0'
+
+name: api_and_mail_wb2
+
+workflows:
+  api_and_mail:
+    description: get data from api and send mail
+    type: direct
+
+    output:
+      get_api_data: <% $.api_data %>
+    
+    tasks:
+      get_data:
+        action: std.http url='https://slim.webex.com/slim/restservice/zookeeper/status.json'
+        publish:
+          api_data: <% task(get_data).result %>
+        on-success:
+          - send_mail
+
+      send_mail:
+        action: std.email
+        input:
+          to_addrs: ['yuzhou2@cisco.com']
+          subject: 'mistral test mail'
+          body: <% task(get_data).result %>
+          from_addr: 'yuzhou2@cisco.com'
+          smtp_server: 'mda.webex.com'
+          smtp_password: ''

@@ -1,0 +1,27 @@
+---
+version: '2.0'
+
+name: predefine_demo_wb
+
+workflows:
+  predefine_demo:
+    description: get data from api and send mail
+    type: direct
+
+    output:
+      get_api_data: <% $.api_data %>
+      get_task_id: <% $.task_id %>
+      get_task_state: <% $.task_state %>
+
+    tasks:
+      get_data:
+        action: std.http url='https://slim.webex.com/slim/restservice/zookeeper/status.json'
+        publish:
+          api_data: <% task(get_data).result.content %>
+        on-success:
+          - echo_system
+      echo_system:
+        action: std.echo output='echo result string'
+        publish:
+          task_id: <% task(echo_system).id %>
+          task_state: <% task(echo_system).state %>

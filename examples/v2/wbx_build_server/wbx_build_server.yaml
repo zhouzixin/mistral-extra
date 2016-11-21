@@ -1,0 +1,52 @@
+---
+version: '2.0'
+
+create_vm_and_send_email:
+  type: direct
+
+  input:
+    - vm_name
+    - image_id
+    - flavor_id
+    - monitor_url
+    - expected_result
+
+  output:
+    result: <% $.vm_id $.vm_name $.vm_ip %>
+
+  tasks:
+    create_vm:
+      action: nova.servers_create name=<% $.vm_name %> image=<% $.image_id %> flavor=<% $.flavor_id %>
+      publish:
+        vm_id: <% task(create_vm).result.id %>
+        vm_ip: <% task(create_vm).result.accessIPv4 %>
+      on-error:
+        - send_error_email
+      on-success:
+        - send_success_email
+        - register_vm_to_slim
+        - register_vm_to_mct
+
+    send_error_email:
+      action: send_email to_addrs=['csg-cws@cisco.com'] body='Failed to create VM'
+      on-complete:
+        - fail
+
+    send_success_email:
+      action: send_email to_addrs=['csg-cws@cisco.com'] body='Vm is successfully created and its ip is <% $.vm_ip %>'
+
+    register_vm_to_slim:
+      action: std.http url='https://slim.webex.com/restapi/register?name=<% $.vm_name %>&ip=<% $.vm_ip %>'
+      on-error:
+        - send_slim_error_email
+
+    register_vm_to_mct:
+      action: std.http url='https://mct.webex.com/restapi/register?ip=<% $.vm_ip %>&url=<% $.monitor_url %>'
+      on-error:
+        - send_mct_error_email
+
+    send_slim_error_email:
+      action: send_email to_addrs=['csg-cws@cisco.com'] body='Failed to register VM to slim'
+
+    send_mct_error_email:
+      action: send_email to_addrs=['csg-cws@cisco.com'] body='Failed to register VM to mct'

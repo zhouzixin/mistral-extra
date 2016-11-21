@@ -1,0 +1,6 @@
+{
+    "to_email": "admin@my_domain.com",
+    "from_email": "my_address@my_domain.com",
+    "smtp_server": "smtp.my_domain.com:587",
+    "smtp_password": "my_password"
+}
