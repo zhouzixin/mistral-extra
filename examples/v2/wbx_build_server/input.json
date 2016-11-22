@@ -1,0 +1,7 @@
+{
+  "vm_name" : "mistral_demo_vm",
+  "image_id" : "centos-7-x64",
+  "flavor_id" : "mini.tiny",
+  "monitor_url" : "/healthcheck",
+  "expected_result" : "OKOKOK"
+}
